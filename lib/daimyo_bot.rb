@@ -20,7 +20,7 @@ class DaimyoBot < SlackRubyBot::Bot
     client.say(text: 'pong', channel: data.channel)
   end
 
-  match /^(大名小|FGN)(の場所)?/ do |client, data, match|
+  match /(大名小|FGN)(の場所)?/ do |client, data, match|
     client.say(text: 'here: https://goo.gl/maps/tkQ1sNnLJp6MPYtx6', channel: data.channel)
   end
 end
