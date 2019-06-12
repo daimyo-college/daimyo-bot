@@ -1,0 +1,47 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: daimyo-bot-core
+  labels:
+    app: daimyo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: daimyo
+  template:
+    metadata:
+      labels:
+        app: daimyo
+    spec:
+      dnsConfig:
+        nameservers:
+          - 8.8.8.8
+          - 8.8.4.4
+      containers:
+      - name: daimyo-bot-core
+        image: udzura/daimyo-bot
+        imagePullPolicy: Always
+        tty: true
+        args: ["exe/daimyo-bot"]
+        securityContext:
+          readOnlyRootFilesystem: true
+          runAsUser: 65534 # nobody
+        env:
+          - name: REDIS_URL
+            value: 'redis://redis:6379'
+          - name: SLACK_API_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: daimyo-slack-api-token
+                key: daimyo-slack-api-token.txt
+          # - name: SLACK_API_USER_TOKEN
+          #   valueFrom:
+          #     secretKeyRef:
+          #       name: daimyo-slack-api-user-token
+          #       key: daimyo-slack-api-user-token.txt
+          # - name: SLACK_VERIFICATION_TOKEN
+          #   valueFrom:
+          #     secretKeyRef:
+          #       name: daimyo-slack-verification-token
+          #       key: sssbot-slack-verification-token.txt
