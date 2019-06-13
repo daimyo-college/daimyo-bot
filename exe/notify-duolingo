@@ -1,0 +1,8 @@
+#!ruby
+$LOAD_PATH.push(File.expand_path('../../lib', __FILE__))
+
+require 'daimyo_bot/oneshot'
+
+DaimyoBot::Oneshot.new do |shot|
+  shot.notify_duolingo
+end
