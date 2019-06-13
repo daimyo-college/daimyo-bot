@@ -8,5 +8,6 @@ gem 'slack-ruby-bot'
 gem 'async-websocket', '~> 0.8.0'
 gem 'redis'
 gem 'redis-namespace'
+gem 'pry'
 
 # gem "rails"
