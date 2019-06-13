@@ -15,6 +15,17 @@ class DaimyoBot < SlackRubyBot::Bot
     @scoreboard ||= Redis::Namespace.new(:daimyo_scoreboard, redis: Redis.current)
   end
 
+  def self.obj_to_display_name(user)
+    name = if user.profile && user.profile.display_name.present?
+             user.profile.display_name.split.join
+           elsif user.name.present?
+             user.name
+           else
+             user.real_name.split.join
+           end
+    name
+  end
+
   help do
     title 'Daimyo Bot'
     desc '大名エンジニアカレッジのボット.'
@@ -51,28 +62,37 @@ class DaimyoBot < SlackRubyBot::Bot
   end
 
   match /(answer|答え|回答)(\:|：)(.+)/ do |client, data, match|
-    if target = brain.get('git_quiz')
+    target = brain.get('git_quiz')
+    if row = GIT_QUIZ[target.to_i]
       answer = match[3]
-      real = GIT_QUIZ[target.to_i][1]
+      real = row[1]
 
       if answer.strip == real
-        user = client.web_client.users_info(user: data.user)
+        msg = client.web_client.users_info(user: data.user)
+        name = obj_to_display_name(msg.user)
 
-        score = scoreboard.get(user.name) || 0
+        score = scoreboard.get(name) || 0
         score = score.to_i + 10
-        scoreboard.set(user.name, score.to_s)
+        scoreboard.set(name, score.to_s)
         client.say(text: "正解！！", channel: data.channel)
-        client.say(text: "#{user.name} さんに10pt進呈！ Current: #{score}pt", channel: data.channel)
+        client.say(text: "#{name} さんに10pt進呈！ Current: #{score}pt", channel: data.channel)
       else
         client.say(text: "正解は: #{real}", channel: data.channel)
       end
-      brain.set('git_quiz', nil)
+      brain.set('git_quiz', '0')
     else
       client.say(text: "`git quiz` でクイズを出してください", channel: data.channel)
     end
   end
 
-
+  command 'scorekeeper' do |client, data, match|
+    user = match[:expression]
+    if user == "me"
+      obj = client.web_client.users_info(user: data.user)
+      user = obj_to_display_name(obj.user)
+    end
+    client.say(text: "Current score of #{user}: #{scoreboard.get(user) || 0}pt", channel: data.channel)
+  end
 
   match /([^\s+-]+)\+\+/ do |client, data, match|
     user = match[1]
